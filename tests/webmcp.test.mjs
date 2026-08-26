@@ -18,7 +18,9 @@ class FakeModelContext extends EventTarget {
       _tool:t
     }));
   }
-  async executeTool(registered, input={}) {
+  async executeTool(registered, inputJson='{}') {
+    assert.equal(typeof inputJson, 'string', 'WebMCP executeTool input must be a JSON string');
+    const input = JSON.parse(inputJson);
     const live = this.tools.get(registered.name);
     if (!live) throw new Error('tool unavailable');
     const result = await live.execute(input, { signal: new AbortController().signal });
@@ -28,11 +30,11 @@ class FakeModelContext extends EventTarget {
 
 const context = new FakeModelContext();
 globalThis.document = { modelContext: context };
-globalThis.location = { search:'', origin:'https://supplier.test' };
+globalThis.location = { search:'', origin:'https://supplier.test', href:'https://supplier.test/' };
 globalThis.window = { parent:null };
 globalThis.window.parent = globalThis.window;
 
-const { registerSupplierTools, resolveBuyerOrigin } = await import('../js/webmcp.js');
+const { registerSupplierTools, resolveBuyerOrigin, executeTool } = await import('../js/webmcp.js');
 
 location.search='?buyerOrigin=https%3A%2F%2Fbuyer.example';
 window.OPENDEAL_CONFIG={allowedBuyerOrigins:[]};
@@ -51,9 +53,7 @@ names = (await context.getTools()).map(t=>t.name).sort();
 assert.equal(names.length, 6);
 assert.equal(names.includes('bravo.create_purchase_order'), true);
 
-const purchase = (await context.getTools()).find(t=>t.name==='bravo.create_purchase_order');
-const raw = await context.executeTool(purchase,{approvedTotal:2325,approvalToken:'OD-APPROVED-1047'});
-const result = JSON.parse(raw);
+const result = await executeTool('bravo.create_purchase_order',{approvedTotal:2325,approvalToken:'OD-APPROVED-1047'},{});
 assert.equal(result.poId,'OD-1047');
 assert.equal(result.total,2325);
 
