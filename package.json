@@ -1,0 +1,7 @@
+{
+  "name":"opendeal-webmcp-challenge",
+  "version":"0.1.0",
+  "private":true,
+  "type":"module",
+  "scripts":{"test":"node tests/domain.test.mjs && node tests/webmcp.test.mjs","serve":"python3 -m http.server 4173"}
+}
