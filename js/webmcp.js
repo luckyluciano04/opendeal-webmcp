@@ -111,4 +111,10 @@ export async function waitForTool(name, urls, timeoutMs=2500) {
   while(Date.now()-start<timeoutMs){const tool=await findTool(name,urls);if(tool)return tool;await new Promise(r=>setTimeout(r,80));}
   throw new Error(`Timed out waiting for WebMCP tool ${name}.`);
 }
-export async function executeTool(name,input,urls){if(!document.modelContext)throw new Error('WebMCP unavailable.');const tool=await waitForTool(name,urls);const raw=await document.modelContext.executeTool(tool,input);try{return JSON.parse(raw);}catch{return raw;}}
+export async function executeTool(name,input,urls){
+  if(!document.modelContext)throw new Error('WebMCP unavailable.');
+  const tool=await waitForTool(name,urls);
+  const raw=await document.modelContext.executeTool(tool,JSON.stringify(input??{}));
+  if(typeof raw!=='string')return raw;
+  try{return JSON.parse(raw);}catch{return raw;}
+}
